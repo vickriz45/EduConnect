@@ -1,4 +1,4 @@
-package com.example.educonnect.auth
+package com.example.educonnect.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,13 +13,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import com.example.educonnect.ui.auth.AuthViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -27,8 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educonnect.components.EduButton
 import com.example.educonnect.components.EduTextField
 import com.example.educonnect.ui.theme.GrayText
@@ -79,31 +81,45 @@ fun LoginScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        // INPUT PASSWORD (Tambahkan ini agar sesuai desain Figma)
         EduTextField(
             value = password,
             onValueChange = { password = it },
             label = "Password",
-            leadingIcon = Icons.Default.Lock, // Perlu import Icons.Default.Lock
-            isPassword = true // Supaya teks bintang-bintang
+            leadingIcon = Icons.Default.Lock,
+            isPassword = true
         )
 
-        // Tampilkan pesan error jika gagal
-        viewModel.loginStatus?.let {
-            Text(it, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+        // 3. Status Loading atau Pesan Error/Sukses dari Firebase
+        viewModel.loginStatus?.let { status ->
+            val textColor = if (status.contains("Berhasil")) Color(0xFF2E7D32) else Color.Red
+            Text(
+                text = status,
+                color = textColor,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 3. Login Button
-        EduButton(
-            text = "Login",
-            onClick = {
-                if(nim.isNotEmpty()) {
-                    viewModel.login(nim, onLoginSuccess)
+        // 4. Login Button dengan kondisi Loading
+        if (viewModel.isLoading) {
+            CircularProgressIndicator(color = PurpleMain)
+        } else {
+            EduButton(
+                text = "Login",
+                onClick = {
+                    if (nim.isNotEmpty() && password.isNotEmpty()) {
+                        // Di sini kita panggil fungsi login baru yang butuh NIM dan Password
+                        viewModel.login(nim, password, onLoginSuccess)
+                    }
                 }
-            }
-        )
-        // 4. Footer
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 5. Footer Navigasi ke Register
         TextButton(onClick = onNavigateToRegister) {
             Text("Belum punya akun? Daftar sekarang", color = TextDark)
         }

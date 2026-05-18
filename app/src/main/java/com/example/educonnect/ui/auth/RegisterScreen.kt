@@ -1,4 +1,4 @@
-package com.example.educonnect.auth
+package com.example.educonnect.ui.auth
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -23,11 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.educonnect.components.EduButton
 import com.example.educonnect.components.EduTextField
-import com.example.educonnect.ui.auth.AuthViewModel
 import com.example.educonnect.utils.NIMMapper
 
 @Composable
@@ -65,6 +67,13 @@ fun RegisterScreen (
             leadingIcon = Icons.Default.Person
         )
         EduTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = "Email Pribadi",
+            leadingIcon = Icons.Default.Email, // Pastikan import Icons.Default.Email jika diperlukan
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+        EduTextField(
             value = nim,
             onValueChange = { nim = it },
             label = "NIM (Student ID)",
@@ -89,11 +98,12 @@ fun RegisterScreen (
         Spacer(modifier = Modifier.height(32.dp))
         //Button daftar
         EduButton(
-            text = "Daftar ->",
+            text = "Daftar",
             onClick = {
-                if (fullName.isNotEmpty() && nim.isNotEmpty()) {
-                    viewModel.register(nim, fullName, studentClass, email)
-                    println("Data berhasil disimpan ke Room Database")
+                if (fullName.isNotEmpty() && nim.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
+                    viewModel.register(nim, fullName, studentClass, email, password) {
+                        onNavigateToLogin()
+                    }
                 }
             }
         )
