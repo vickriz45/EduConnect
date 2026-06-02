@@ -17,10 +17,15 @@ import com.example.educonnect.ui.home.HomeScreen
 import com.example.educonnect.ui.profile.EditProfileScreen
 import com.example.educonnect.ui.profile.ProfileScreen
 import com.example.educonnect.ui.theme.EduConnectTheme
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     override fun onCreate(savedInstanceState: Bundle?) {
+        firebaseAnalytics = Firebase.analytics
         super.onCreate(savedInstanceState)
         setContent {
             EduConnectTheme {

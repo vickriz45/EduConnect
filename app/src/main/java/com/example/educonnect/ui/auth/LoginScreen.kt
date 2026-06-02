@@ -1,5 +1,6 @@
 package com.example.educonnect.ui.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -89,6 +91,7 @@ fun LoginScreen(
             isPassword = true
         )
 
+
         // 3. Status Loading atau Pesan Error/Sukses dari Firebase
         viewModel.loginStatus?.let { status ->
             val textColor = if (status.contains("Berhasil")) Color(0xFF2E7D32) else Color.Red
@@ -99,7 +102,6 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-
         Spacer(modifier = Modifier.height(32.dp))
 
         // 4. Login Button dengan kondisi Loading
