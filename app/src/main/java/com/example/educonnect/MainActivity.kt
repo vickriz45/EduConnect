@@ -16,11 +16,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //Inisialisasi database
         val db = Room.databaseBuilder(
             applicationContext,
-            AppDatabase::class.java, "educonnect-db"
-        ).build()
+            AppDatabase::class.java,
+            "educonnect-db"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+
         val repository = AuthRepository(db.userDAO())
         val authViewModel = AuthViewModel(repository)
 
@@ -28,7 +31,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             EduConnectTheme {
                 val navController = rememberNavController()
-                // Panggil Navigasi Utama
                 NavGraph(navController = navController, authViewModel = authViewModel)
             }
         }

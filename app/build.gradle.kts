@@ -67,6 +67,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-//    implementation(project(":view_model_factory"))
-//    ksp(project(":view_model_factory"))
+    dependencies {
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    }
+
 }

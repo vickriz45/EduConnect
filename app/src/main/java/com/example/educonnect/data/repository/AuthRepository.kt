@@ -3,13 +3,18 @@ package com.example.educonnect.data.repository
 import com.example.educonnect.data.local.UserDAO
 import com.example.educonnect.data.local.UserEntity
 
-class AuthRepository(private val userDao: UserDAO) {
-    //Fungsi yang dipanggil saat mengklik tombol DAFTAR
-    suspend fun registerUser(user: UserEntity){
-        //Simulasi dummy: Simpan ke lokal dulu
+class AuthRepository(
+    private val userDao: UserDAO
+) {
+    suspend fun insertUser(user: UserEntity) {
         userDao.insertUser(user)
     }
-    suspend fun getSavedUser(): UserEntity? {
+
+    suspend fun getUserProfile(): UserEntity? {
         return userDao.getUserProfile()
+    }
+
+    suspend fun clearData() {
+        userDao.clearData()
     }
 }

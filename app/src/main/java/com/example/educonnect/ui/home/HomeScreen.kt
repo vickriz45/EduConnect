@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.PersonOutline
@@ -29,12 +31,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.educonnect.R
 import com.example.educonnect.components.EduBottomNavigation
-import com.example.educonnect.components.MenuCard
 import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
@@ -42,109 +45,205 @@ import com.example.educonnect.ui.theme.TextDark
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    username: String = "Sumbul",
-    onNavigateToChat: () -> Unit,
-    onNavigateToProfile: () ->Unit
-){
+    username: String = "Sumbul"
+) {
     Scaffold(
         bottomBar = { EduBottomNavigation(navController = navController) }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF8F9FA))
-                .padding(padding)
-                .padding(20.dp)
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
         ) {
-            /*1. Header*/
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically){
-                    Icon(Icons.Default.School, contentDescription = null, tint = PurpleMain)
-                    Spacer(modifier = Modifier.width(8.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.School,
+                        contentDescription = null,
+                        tint = PurpleMain,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         "EduConnect",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         color = TextDark
                     )
                 }
-                // Placeholder untuk logo PNM dan TRPL
-                Row {
-                    Box(modifier = Modifier.size(30.dp).background(Color.LightGray, CircleShape))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.size(30.dp).background(Color.LightGray, CircleShape))
-                }
-            }
-            Spacer(modifier = Modifier.height(32.dp))
 
-            /* 2. Welcome Txt*/
+                Icon(
+                    painter = painterResource(id = R.drawable.logo_poltek),
+                    contentDescription = "Logo POLTEKxTRPL",
+                    modifier = Modifier.size(80.dp),
+                    tint = Color.Unspecified
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Welcome Text
             Text(
-                "Selamat Datang $username,",
+                text = "Selamat Datang $username,",
                 fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
+                fontSize = 18.sp,
                 color = TextDark
             )
             Text(
-                "di EduConnect. Ini adalah aplikasi antar mahasiswa Politeknik Negeri Madiun",
-                fontSize = 14.sp,
+                text = "di EduConnect. Aplikasi antar mahasiswa Politeknik Negeri Madiun",
+                fontSize = 12.sp,
                 color = GrayText,
-                lineHeight = 20.sp
+                lineHeight = 16.sp
             )
-            Spacer(modifier = Modifier.height(24.dp))
 
-//            3. MAIN BANNER (Card)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Main Banner
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(120.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A40))
             ) {
-                Column(
+                Row(
                     modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Surface(
-                        modifier = Modifier.size(60.dp),
+                        modifier = Modifier.size(40.dp),
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.9f)
                     ) {
                         Icon(
-                            Icons.Default.Terminal, // Ikon mirip code/terminal
+                            Icons.Default.Terminal,
                             contentDescription = null,
                             tint = Color(0xFF1A1A40),
-                            modifier = Modifier.padding(12.dp)
+                            modifier = Modifier.padding(8.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("TRPL", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                    Text("SOFTWARE ENGINEERING", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            "TRPL",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            "SOFTWARE ENGINEERING",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 10.sp
+                        )
                     }
                 }
-            Spacer(modifier = Modifier.height(24.dp))
+            }
 
-//            4. Menu Card
-            Row(modifier = Modifier.fillMaxWidth()) {
-                MenuCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Diskusi",
-                    desc = "Tanya jawab seputar koding.",
-                    icon = Icons.Default.ChatBubbleOutline,
-                    onClick = onNavigateToChat
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                MenuCard(
-                    modifier = Modifier.weight(1f),
-                    title = "Akun Saya",
-                    desc = "Atur profil & preferensi belajar.",
-                    icon = Icons.Default.PersonOutline,
-                    onClick = onNavigateToProfile
-                )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Menu Card
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Card Diskusi
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(100.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    onClick = { navController.navigate("chat") }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = PurpleMain.copy(alpha = 0.1f)
+                        ) {
+                            Icon(
+                                Icons.Default.ChatBubbleOutline,
+                                contentDescription = null,
+                                tint = PurpleMain,
+                                modifier = Modifier.padding(6.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Diskusi",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = TextDark
+                        )
+                        Text(
+                            "Tanya jawab koding",
+                            fontSize = 10.sp,
+                            color = GrayText
+                        )
+                    }
+                }
+
+                // Card Profile
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(100.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    onClick = { navController.navigate("profile") }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(32.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = PurpleMain.copy(alpha = 0.1f)
+                        ) {
+                            Icon(
+                                Icons.Default.PersonOutline,
+                                contentDescription = null,
+                                tint = PurpleMain,
+                                modifier = Modifier.padding(6.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Akun Saya",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = TextDark
+                        )
+                        Text(
+                            "Atur profil belajar",
+                            fontSize = 10.sp,
+                            color = GrayText
+                        )
+                    }
+                }
             }
         }
     }

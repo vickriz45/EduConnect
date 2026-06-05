@@ -39,12 +39,12 @@ import com.example.educonnect.ui.theme.TextDark
 @Composable
 fun EduTextField(
     value: String,
-    onValueChange: (String) -> Unit, // Tadi: onValueString
+    onValueChange: (String) -> Unit,
     label: String,
     leadingIcon: ImageVector,
     isPassword: Boolean = false,
     readOnly: Boolean = false,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default // Tadi: keyboardOption
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -68,7 +68,7 @@ fun EduTextField(
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
         visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = keyboardOptions, // Tambahkan 's' di sini
+        keyboardOptions = keyboardOptions,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PurpleMain,
             unfocusedBorderColor = GrayLight,
@@ -76,6 +76,7 @@ fun EduTextField(
         )
     )
 }
+
 @Composable
 fun EduButton(
     text: String,
@@ -106,6 +107,7 @@ data class NavigationItem(
     val route: String,
     val icon: ImageVector
 )
+
 @Composable
 fun EduBottomNavigation(
     navController: NavController
@@ -116,6 +118,7 @@ fun EduBottomNavigation(
         NavigationItem("Boards", "boards", Icons.Default.GridView),
         NavigationItem("Profile", "profile", Icons.Default.PersonOutline),
     )
+
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 8.dp,
@@ -132,8 +135,9 @@ fun EduBottomNavigation(
                 onClick = {
                     if (currentRoute != item.route) {
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId)
+                            popUpTo("home") { saveState = true }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 },
@@ -141,27 +145,27 @@ fun EduBottomNavigation(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) Color.White else GrayText
+                        tint = if (isSelected) PurpleMain else GrayText
                     )
                 },
                 label = {
                     Text(
                         text = item.title,
                         fontSize = 12.sp,
-                        color = if (isSelected) TextDark else GrayText,
+                        color = if (isSelected) PurpleMain else GrayText,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = TextDark, // Warna navy untuk capsule saat terpilih
+                    selectedIconColor = PurpleMain,
+                    selectedTextColor = PurpleMain,
                     unselectedIconColor = GrayText,
-                    selectedTextColor = TextDark
+                    unselectedTextColor = GrayText
                 )
             )
         }
     }
 }
-
 
 @Composable
 fun MenuCard(modifier: Modifier, title: String, desc: String, icon: ImageVector, onClick: () -> Unit) {
@@ -172,7 +176,7 @@ fun MenuCard(modifier: Modifier, title: String, desc: String, icon: ImageVector,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = onClick
     ) {
-        Column (modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Surface(
                 modifier = Modifier.size(36.dp),
                 shape = RoundedCornerShape(8.dp),

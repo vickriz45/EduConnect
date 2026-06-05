@@ -1,46 +1,49 @@
 package com.example.educonnect.ui.auth
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educonnect.data.local.UserEntity
 import com.example.educonnect.data.repository.AuthRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
-class AuthViewModel(private val repository : AuthRepository) : ViewModel() {
-    //Fungsi untuk memproses pendaftaran
+class AuthViewModel(
+    private val repository: AuthRepository
+) : ViewModel() {
+
+    private val _loginStatus = MutableStateFlow<String?>(null)
+    val loginStatus: StateFlow<String?> = _loginStatus
+
+    fun login(nim: String, password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val user = repository.getUserProfile()
+            if (user != null && user.nim == nim && user.password == password) {
+                _loginStatus.value = null
+                onSuccess()
+            } else {
+                _loginStatus.value = "NIM atau password salah"
+            }
+        }
+    }
+
     fun register(
         nim: String,
         fullName: String,
         studentClass: String,
-        email: String
+        email: String,
+        password: String
     ) {
         viewModelScope.launch {
-            val newUser = UserEntity(
+            val user = UserEntity(
                 nim = nim,
                 fullName = fullName,
                 studentClass = studentClass,
                 email = email,
-                prodi = "TRPL"
+                prodi = "TRPL",
+                password = password
             )
-            repository.registerUser(newUser)
-            //Di sini bisa tambahkan logika navigasi ke home setelah berhasil
-        }
-    }
-
-    var loginStatus by mutableStateOf<String?>(null)
-        private set
-    fun login(nim: String, onLoginSuccess: () -> Unit) {
-        viewModelScope.launch {
-            val user = repository.getSavedUser()
-            if(user != null && user.nim == nim) {
-                loginStatus = "Login Berhasil !"
-                onLoginSuccess()
-            } else {
-                loginStatus
-            }
+            repository.insertUser(user)
         }
     }
 }

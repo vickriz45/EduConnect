@@ -1,10 +1,13 @@
 package com.example.educonnect.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,15 +38,19 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     onLoginSuccess: () -> Unit
 ) {
     var nim by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val loginStatus by viewModel.loginStatus.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -53,7 +60,6 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 1. Logo App & Name
         Icon(
             Icons.Default.School,
             contentDescription = null,
@@ -70,7 +76,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // 2. Input Fields
         EduTextField(
             value = nim,
             onValueChange = { nim = it },
@@ -79,31 +84,48 @@ fun LoginScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        // INPUT PASSWORD (Tambahkan ini agar sesuai desain Figma)
         EduTextField(
             value = password,
             onValueChange = { password = it },
             label = "Password",
-            leadingIcon = Icons.Default.Lock, // Perlu import Icons.Default.Lock
-            isPassword = true // Supaya teks bintang-bintang
+            leadingIcon = Icons.Default.Lock,
+            isPassword = true
         )
 
-        // Tampilkan pesan error jika gagal
-        viewModel.loginStatus?.let {
-            Text(it, color = Color.Red, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = "Lupa Password?",
+                color = PurpleMain,
+                fontSize = 14.sp,
+                modifier = Modifier.clickable { onNavigateToForgotPassword() }
+            )
         }
+
+        if (!loginStatus.isNullOrEmpty()) {
+            Text(
+                text = loginStatus ?: "",
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 3. Login Button
         EduButton(
             text = "Login",
             onClick = {
-                if(nim.isNotEmpty()) {
-                    viewModel.login(nim, onLoginSuccess)
+                if (nim.isNotEmpty() && password.isNotEmpty()) {
+                    viewModel.login(nim, password, onLoginSuccess)
                 }
             }
         )
-        // 4. Footer
+
         TextButton(onClick = onNavigateToRegister) {
             Text("Belum punya akun? Daftar sekarang", color = TextDark)
         }

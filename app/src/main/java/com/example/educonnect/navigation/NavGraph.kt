@@ -1,17 +1,18 @@
 package com.example.educonnect.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.educonnect.auth.LoginScreen
 import com.example.educonnect.auth.RegisterScreen
+import com.example.educonnect.auth.SplashScreen
+import com.example.educonnect.auth.ForgotPasswordScreen
 import com.example.educonnect.ui.auth.AuthViewModel
+import com.example.educonnect.ui.home.HomeScreen
+import com.example.educonnect.ui.profile.ProfileScreen
+import com.example.educonnect.ui.chat.ChatScreen
+import com.example.educonnect.ui.boards.BoardsScreen
 
 @Composable
 fun NavGraph(
@@ -20,30 +21,73 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "login" //aplikasi mulai dari login
+        startDestination = "splash"
     ) {
-        // Halaman login
-        composable("Login") {
+        composable("splash") {
+            SplashScreen(
+                onSplashComplete = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable("login") {
             LoginScreen(
                 viewModel = authViewModel,
                 onNavigateToRegister = { navController.navigate("register") },
-                onLoginSuccess = { navController.navigate("Home") }
+                onNavigateToForgotPassword = { navController.navigate("forgot_password") },
+                onLoginSuccess = {
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
             )
         }
 
-        // Halaman register
         composable("register") {
             RegisterScreen(
                 viewModel = authViewModel,
-                onNavigateToLogin = { navController.popBackStack() } // Kembali ke login
+                onNavigateToLogin = { navController.popBackStack() }
             )
         }
 
-        // Halaman home (Dummy)
+        composable("forgot_password") {
+            ForgotPasswordScreen(
+                onBackToLogin = { navController.popBackStack() }
+            )
+        }
+
         composable("home") {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Selamat datang di Beranda EduConnect !")
-            }
+            HomeScreen(
+                navController = navController,
+                username = "Sumbul"
+            )
+        }
+
+        composable("chat") {
+            ChatScreen(
+                navController = navController,
+                username = "Sumbul"
+            )
+        }
+
+        composable("boards") {
+            BoardsScreen(
+                navController = navController
+            )
+        }
+
+        composable("profile") {
+            ProfileScreen(
+                navController = navController,
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
