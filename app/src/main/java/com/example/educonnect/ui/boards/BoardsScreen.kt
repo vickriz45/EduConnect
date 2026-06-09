@@ -2,38 +2,16 @@ package com.example.educonnect.ui.boards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,14 +24,61 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
-import java.net.URLEncoder
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+data class InteractiveBoardModel(
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val time: String = ""
+)
 
 @Composable
 fun BoardsScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    username: String = "Mahasiswa PNM"
 ) {
+    val firestore = remember { FirebaseFirestore.getInstance() }
+    val auth = remember { FirebaseAuth.getInstance() }
+    val currentUserId = auth.currentUser?.uid ?: ""
+
+    val boardsList = remember { mutableStateListOf<InteractiveBoardModel>() }
+    var showDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        firestore.collection("boards")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null) {
+                    boardsList.clear()
+                    for (doc in snapshot.documents) {
+                        val item = doc.toObject(InteractiveBoardModel::class.java)
+                        if (item != null) {
+                            boardsList.add(item.copy(id = doc.id))
+                        }
+                    }
+                }
+            }
+    }
+
     Scaffold(
-        bottomBar = { EduBottomNavigation(navController = navController) }
+        bottomBar = { EduBottomNavigation(navController = navController) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showDialog = true },
+                containerColor = PurpleMain,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Tambah Pengumuman")
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -78,63 +103,66 @@ fun BoardsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(boardList) { board ->
-                    InteractiveBoardCard(
-                        board = board,
-                        onShareClick = { selectedBoard ->
-                            val encodedTitle = java.net.URLEncoder.encode(selectedBoard.title, "UTF-8")
-                            val encodedDescription = java.net.URLEncoder.encode(selectedBoard.description, "UTF-8")
-                            val encodedTime = java.net.URLEncoder.encode(selectedBoard.time, "UTF-8")
-                            navController.navigate("chat?sharedTitle=$encodedTitle&sharedDescription=$encodedDescription&sharedTime=$encodedTime")
-                        }
-                    )
+            if (boardsList.isEmpty()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text("Belum ada pengumuman kampus.", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(boardsList) { board ->
+                        InteractiveBoardCard(
+                            board = board,
+                            onDeleteClick = { selectedBoard ->
+                                firestore.collection("boards").document(selectedBoard.id).delete()
+                            }
+                        )
+                    }
                 }
             }
+        }
+
+        if (showDialog) {
+            AddBoardDialog(
+                onDismiss = { showDialog = false },
+                onSave = { title, desc, deadline ->
+                    val timestampSekarang = System.currentTimeMillis()
+
+                    val dataTugas = hashMapOf(
+                        "title" to title,
+                        "description" to desc,
+                        "time" to deadline,
+                        "timestamp" to timestampSekarang
+                    )
+
+                    val currentTimeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+                    val teksPesanGrup = "📢 *PENGUMUMAN BARU: $title*\n\n📝 Detail: $desc\n\n⏰ Waktu/Tenggat: $deadline"
+
+                    val dataPesanChat = hashMapOf(
+                        "name" to username,
+                        "message" to teksPesanGrup,
+                        "time" to currentTimeStr,
+                        "senderId" to currentUserId,
+                        "timestamp" to timestampSekarang
+                    )
+
+                    firestore.collection("boards").add(dataTugas)
+                    firestore.collection("group_chats").add(dataPesanChat)
+
+                    showDialog = false
+                }
+            )
         }
     }
 }
 
-data class InteractiveBoardModel(
-    val id: Int,
-    val title: String,
-    val description: String,
-    val time: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val imageColor: Color
-)
-
-val boardList = listOf(
-    InteractiveBoardModel(
-        1, "Campus News",
-        "Disenalis PNN 2026 - HUT PNN akan merayakan dengan mengundang artis internasional",
-        "5h ago", Icons.Default.School, Color(0xFF4CAF50)
-    ),
-    InteractiveBoardModel(
-        2, "Academic Update",
-        "Lulusan 2028 Dipastikan Wisuda - Mulai persiapan dari sekarang!",
-        "Yesterday", Icons.Default.Description, Color(0xFF2196F3)
-    ),
-    InteractiveBoardModel(
-        3, "Workshop",
-        "Advanced Software Development - Bangun aplikasi dari nol hingga deployment",
-        "2 days ago", Icons.Default.CalendarToday, Color(0xFFFF9800)
-    ),
-    InteractiveBoardModel(
-        4, "Campus Life",
-        "PMN Peduli - Penggalangan dana untuk korban bencana alam",
-        "Yesterday", Icons.Default.People, Color(0xFF9C27B0)
-    )
-)
-
 @Composable
 fun InteractiveBoardCard(
     board: InteractiveBoardModel,
-    onShareClick: (InteractiveBoardModel) -> Unit
+    onDeleteClick: (InteractiveBoardModel) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -146,9 +174,7 @@ fun InteractiveBoardCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -156,40 +182,29 @@ fun InteractiveBoardCard(
                 Surface(
                     modifier = Modifier.size(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = board.imageColor.copy(alpha = 0.1f)
+                    color = PurpleMain.copy(alpha = 0.1f)
                 ) {
                     Icon(
-                        board.icon,
+                        Icons.Default.School,
                         contentDescription = null,
-                        tint = board.imageColor,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)
+                        tint = PurpleMain,
+                        modifier = Modifier.fillMaxSize().padding(12.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        board.title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = TextDark
-                    )
+                    Text(board.title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextDark)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        board.time,
-                        fontSize = 12.sp,
-                        color = GrayText
-                    )
+                    Text("Tenggat/Waktu: ${board.time}", fontSize = 12.sp, color = GrayText)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = if (isExpanded) board.description else board.description.take(100) + "...",
+                text = if (isExpanded) board.description else if (board.description.length > 100) board.description.take(100) + "..." else board.description,
                 fontSize = 14.sp,
                 color = GrayText,
                 lineHeight = 20.sp
@@ -205,24 +220,53 @@ fun InteractiveBoardCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { onShareClick(board) },
-                    modifier = Modifier.size(32.dp)
-                ) {
+                IconButton(onClick = { onDeleteClick(board) }, modifier = Modifier.size(32.dp)) {
                     Icon(
-                        Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = GrayText,
+                        Icons.Default.Delete,
+                        contentDescription = "Hapus",
+                        tint = Color.Red.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+fun AddBoardDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, String, String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var desc by remember { mutableStateOf("") }
+    var deadline by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text("Tambah Pengumuman Baru", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Judul Pengumuman") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text("Isi Deskripsi") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = deadline, onValueChange = { deadline = it }, label = { Text("Waktu / Deadline") }, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { if (title.isNotBlank() && desc.isNotBlank()) onSave(title, desc, deadline) },
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleMain)
+            ) { Text("Simpan") }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) { Text("Batal", color = Color.Gray) }
+        }
+    )
 }

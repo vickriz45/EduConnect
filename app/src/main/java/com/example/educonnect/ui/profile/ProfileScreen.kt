@@ -18,11 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.educonnect.components.EduBottomNavigation
 import com.example.educonnect.ui.auth.AuthViewModel
 import com.example.educonnect.ui.theme.GrayText
@@ -48,7 +50,7 @@ fun ProfileScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            // ── Header ──────────────────────────────────────────────────
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -72,7 +74,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Avatar ──────────────────────────────────────────────────
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -84,18 +85,26 @@ fun ProfileScreen(
                         .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        tint = GrayText,
-                        modifier = Modifier.size(50.dp)
-                    )
+                    if (!userProfile?.profilePictureUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = userProfile?.profilePictureUrl,
+                            contentDescription = "Foto Profil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = GrayText,
+                            modifier = Modifier.size(50.dp)
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Nama ────────────────────────────────────────────────────
             Text(
                 text = userProfile?.fullName ?: "Nama Mahasiswa",
                 fontWeight = FontWeight.Bold,
@@ -106,7 +115,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // ── Info Card ───────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -136,7 +144,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Tombol Logout ───────────────────────────────────────────
             Button(
                 onClick = onLogout,
                 modifier = Modifier

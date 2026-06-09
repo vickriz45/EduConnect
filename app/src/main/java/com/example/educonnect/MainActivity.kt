@@ -17,11 +17,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Menggunakan Singleton untuk mengambil instance Database
         val db = AppDatabase.getDatabase(applicationContext)
         val repository = AuthRepository(db.userDAO())
 
-        // 2. Menggunakan Factory agar ViewModel tahan terhadap perubahan konfigurasi (seperti rotasi layar)
         val viewModelFactory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {

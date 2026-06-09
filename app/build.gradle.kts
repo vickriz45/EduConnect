@@ -1,10 +1,6 @@
-import org.gradle.api.internal.properties.GradleProperties
-import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android) // FIX 1: Memasukkan plugin Kotlin Android agar tidak lagi "Kotlin not configured"
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     id("kotlin-parcelize")
@@ -23,7 +19,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        multiDexEnabled = true // Tambahan aman agar Firebase tidak bikin force close
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -53,6 +49,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-analytics")
+    implementation(libs.firebase.storage.ktx)
 
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -60,6 +57,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     ksp("androidx.room:room-compiler:$roomVersion")
 
+    implementation(libs.coil.compose)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

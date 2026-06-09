@@ -1,7 +1,5 @@
 package com.example.educonnect.ui.auth
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -21,16 +19,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
+import kotlinx.coroutines.delay // ─── Import Coroutine Delay
 
 @Composable
 fun SplashScreen(
+    authViewModel: AuthViewModel,
     onSplashComplete: () -> Unit
 ) {
     var isAnimationFinished by remember { mutableStateOf(false) }
@@ -42,9 +41,8 @@ fun SplashScreen(
 
     LaunchedEffect(Unit) {
         isAnimationFinished = true
-        Handler(Looper.getMainLooper()).postDelayed({
-            onSplashComplete()
-        }, 2000)
+        delay(2000)
+        onSplashComplete()
     }
 
     Box(

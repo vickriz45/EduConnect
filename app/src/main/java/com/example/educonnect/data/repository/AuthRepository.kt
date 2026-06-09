@@ -167,40 +167,78 @@ class AuthRepository(
         }
     }
 
+    suspend fun resetPassword(email: String, onSuccess: () -> Unit, onFailure: (String) -> Unit) {
+        try {
+            Log.d("AuthRepo", "Meminta reset password untuk email: $email")
+            firebaseAuth.sendPasswordResetEmail(email).await()
+            Log.d("AuthRepo", "Email instruksi reset password berhasil dikirim")
+            onSuccess()
+        } catch (e: Exception) {
+            Log.e("AuthRepo", "Gagal mengirim email reset: ${e.message}", e)
+            onFailure(e.localizedMessage ?: "Gagal mengirim instruksi reset password")
+        }
+    }
+
     suspend fun updateProfile(
         email: String,
+        imageUri: android.net.Uri? = null,
+        context: android.content.Context,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         try {
-            Log.d("AuthRepo", "Update profile: email=$email")
+            Log.d("AuthRepo", "Memulai proses update profile: email=$email")
 
             val currentUser = firebaseAuth.currentUser
             if (currentUser == null) {
-                Log.e("AuthRepo", "User tidak login")
+                Log.e("AuthRepo", "Operasi dibatalkan: User tidak terautentikasi")
                 onFailure("User tidak login")
                 return
             }
 
-            val updates = mapOf(
+            val updates = hashMapOf<String, Any>(
                 "email" to email
             )
 
+            if (imageUri != null) {
+                Log.d("AuthRepo", "Mendeteksi file gambar baru, memulai upload ke Firebase Storage...")
+
+                val storage = com.google.firebase.storage.FirebaseStorage.getInstance()
+                val storageRef = storage.reference.child("profile_pictures/${currentUser.uid}.jpg")
+
+                val uploadTask = storageRef.putFile(imageUri)
+                uploadTask.await()
+                Log.d("AuthRepo", "Upload ke Storage berhasil sepenuhnya!")
+
+                val downloadUrl = storageRef.downloadUrl.await().toString()
+                Log.d("AuthRepo", "Mendapatkan URL Publik: $downloadUrl")
+
+                updates["profilePictureUrl"] = downloadUrl
+            }
+
             firestore.collection("users").document(currentUser.uid).update(updates).await()
-            Log.d("AuthRepo", "Firestore update success")
+            Log.d("AuthRepo", "Sinkronisasi Cloud Firestore Sukses!")
 
             val currentUserData = userDao.getUserProfile()
             currentUserData?.let {
-                val updatedUser = it.copy(email = email)
+                val updatedUser = it.copy(
+                    email = email,
+                    profilePictureUrl = if (updates.containsKey("profilePictureUrl")) updates["profilePictureUrl"].toString() else it.profilePictureUrl
+                )
                 userDao.insertUser(updatedUser)
-                Log.d("AuthRepo", "Room update success")
+                Log.d("AuthRepo", "Sinkronisasi Room Cache Lokal Sukses!")
             }
 
-            cachedUser = cachedUser?.copy(email = email)
+            cachedUser = cachedUser?.copy(
+                email = email,
+                profilePictureUrl = if (updates.containsKey("profilePictureUrl")) updates["profilePictureUrl"].toString() else cachedUser?.profilePictureUrl ?: ""
+            )
 
+            Log.d("AuthRepo", "PROSES UPDATE PROFIL SELESAI DENGAN SUKSES")
             onSuccess()
+
         } catch (e: Exception) {
-            Log.e("AuthRepo", "Update profile error: ${e.message}", e)
+            Log.e("AuthRepo", "Terjadi kesalahan saat update profile: ${e.message}", e)
             onFailure(e.localizedMessage ?: "Gagal memperbarui profil")
         }
     }

@@ -1,6 +1,7 @@
 package com.example.educonnect.ui.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,8 +25,8 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
-import com.google.firebase.auth.FirebaseAuth // Import Auth
-import com.google.firebase.firestore.FirebaseFirestore // Import Firestore
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -35,12 +36,12 @@ data class ChatMessage(
     val name: String = "",
     val message: String = "",
     val time: String = "",
-    val senderId: String = "" // Tambahkan ini untuk melacak UID pengirim di Firebase
+    val senderId: String = ""
 )
 @Composable
 fun ChatScreen(
     navController: NavHostController,
-    username: String = "Mahasiswa PNM", // Default username jika dari auth belum ke-passing
+    username: String = "Mahasiswa PNM",
     sharedTitle: String = "",
     sharedDescription: String = "",
     sharedTime: String = ""
@@ -51,15 +52,13 @@ fun ChatScreen(
     val messages = remember { mutableStateListOf<ChatMessage>() }
     var memberCount by remember { mutableStateOf(0) }
 
-    // Inisialisasi Firebase Instansi
     val firestore = remember { FirebaseFirestore.getInstance() }
     val auth = remember { FirebaseAuth.getInstance() }
     val currentUserId = auth.currentUser?.uid ?: ""
 
-    // 1. MENDENGARKAN DATABASE FIRESTORE SECARA REAL-TIME
     LaunchedEffect(Unit) {
         firestore.collection("group_chats")
-            .orderBy("timestamp", Query.Direction.ASCENDING) // Mengurutkan chat dari yang terlama ke terbaru
+            .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
 
@@ -82,7 +81,6 @@ fun ChatScreen(
             }
     }
 
-    // Auto fill message text ketika ada data kiriman share dari Boards Page
     LaunchedEffect(sharedTitle, sharedDescription, sharedTime) {
         if (sharedTitle.isNotEmpty() && sharedDescription.isNotEmpty() && !hasAutoFilled) {
             messageText = "📢 ${sharedTitle}\n\n${sharedDescription}\n\nWaktu: ${sharedTime}"
@@ -99,11 +97,11 @@ fun ChatScreen(
                 .background(White)
                 .padding(paddingValues)
         ) {
-            // Header Group Diskusi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(PurpleMain.copy(alpha = 0.1f))
+                    .clickable{navController.navigate("group_members")}
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -137,7 +135,6 @@ fun ChatScreen(
                 }
             }
 
-            // Chat messages list
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -146,14 +143,12 @@ fun ChatScreen(
                 reverseLayout = false
             ) {
                 items(messages) { message ->
-                    // Cek kepemilikan pesan berdasarkan UID Firebase Auth yang sedang login
                     val isOwn = message.senderId == currentUserId
                     ChatBubble(message = message, isOwnMessage = isOwn)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
-            // Input message area
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -178,19 +173,16 @@ fun ChatScreen(
                 IconButton(
                     onClick = {
                         if (messageText.isNotBlank()) {
-                            // FORMAT WAKTU (Jam:Menit)
                             val currentTimeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 
-                            // DATA DATA YANG DIKIRIM KE CLOUD DATABASE FIRESTORE
                             val dataPesan = hashMapOf(
                                 "name" to username,
                                 "message" to messageText,
                                 "time" to currentTimeStr,
                                 "senderId" to currentUserId,
-                                "timestamp" to System.currentTimeMillis() // Dipakai untuk sorting data di query atas
+                                "timestamp" to System.currentTimeMillis()
                             )
 
-                            // Tembak langsung ke dokumen Firestore
                             firestore.collection("group_chats").add(dataPesan)
 
                             messageText = ""
@@ -224,7 +216,7 @@ fun ChatBubble(message: ChatMessage, isOwnMessage: Boolean) {
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = 280.dp) // Menggunakan widthIn agar balon mengecil jika chat pendek
+                .widthIn(max = 280.dp)
                 .background(bubbleColor, RoundedCornerShape(16.dp))
                 .padding(12.dp)
         ) {
@@ -247,7 +239,7 @@ fun ChatBubble(message: ChatMessage, isOwnMessage: Boolean) {
                 message.time,
                 fontSize = 10.sp,
                 color = if (isOwnMessage) Color.White.copy(alpha = 0.7f) else GrayText,
-                modifier = Modifier.align(Alignment.End) // Taruh keterangan waktu di pojok kanan bawah balon chat
+                modifier = Modifier.align(Alignment.End)
             )
         }
     }

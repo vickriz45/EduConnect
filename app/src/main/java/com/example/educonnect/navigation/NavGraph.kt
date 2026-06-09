@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.educonnect.ui.auth.LoginScreen
 import com.example.educonnect.ui.auth.RegisterScreen
@@ -15,12 +16,13 @@ import com.example.educonnect.ui.home.HomeScreen
 import com.example.educonnect.ui.profile.ProfileScreen
 import com.example.educonnect.ui.chat.ChatScreen
 import com.example.educonnect.ui.boards.BoardsScreen
+import com.example.educonnect.ui.chat.GroupMembersScreen
 import com.example.educonnect.ui.profile.EditProfileScreen
 import java.net.URLDecoder
 
 @Composable
 fun NavGraph(
-    navController: NavHostController,
+    navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel
 ) {
     NavHost(
@@ -29,9 +31,18 @@ fun NavGraph(
     ) {
         composable("splash") {
             SplashScreen(
+                authViewModel = authViewModel,
                 onSplashComplete = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true }
+                    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+                    if (currentUser != null) {
+                        navController.navigate("home") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
                     }
                 }
             )
@@ -59,6 +70,7 @@ fun NavGraph(
 
         composable("forgot_password") {
             ForgotPasswordScreen(
+                authViewModel = authViewModel,
                 onBackToLogin = { navController.popBackStack() }
             )
         }
@@ -70,7 +82,6 @@ fun NavGraph(
             )
         }
 
-        // SATU ROUTE CHAT dengan PARAMETER OPTIONAL
         composable(
             route = "chat?sharedTitle={sharedTitle}&sharedDescription={sharedDescription}&sharedTime={sharedTime}",
             arguments = listOf(
@@ -128,6 +139,11 @@ fun NavGraph(
                         }
                     }
                 }
+            )
+        }
+        composable("group_members") {
+            GroupMembersScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

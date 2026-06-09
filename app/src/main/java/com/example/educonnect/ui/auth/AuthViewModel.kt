@@ -1,5 +1,6 @@
 package com.example.educonnect.ui.auth
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.educonnect.data.local.UserEntity
@@ -20,13 +21,12 @@ class AuthViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = null
         )
-
     private val _loginStatus = MutableStateFlow<String?>(null)
     val loginStatus: StateFlow<String?> = _loginStatus
-
-    // Status untuk operasi update profile: null = idle, "success" = berhasil, pesan lain = error
     private val _updateStatus = MutableStateFlow<String?>(null)
     val updateStatus: StateFlow<String?> = _updateStatus
+    private val _forgotPasswordStatus = MutableStateFlow<String?>(null)
+    val forgotPasswordStatus: StateFlow<String?> = _forgotPasswordStatus
 
     fun login(nim: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
@@ -65,11 +65,38 @@ class AuthViewModel(
         }
     }
 
-    fun updateProfile(email: String) {
+    fun resetPassword(email: String, onEmailSent: () -> Unit) {
+        viewModelScope.launch {
+            _forgotPasswordStatus.value = null
+            if (email.isBlank()) {
+                _forgotPasswordStatus.value = "Email tidak boleh kosong"
+                return@launch
+            }
+
+            repository.resetPassword(
+                email = email,
+                onSuccess = {
+                    _forgotPasswordStatus.value = "success"
+                    onEmailSent() // Callback untuk pindah halaman atau memicu pop-up informasi
+                },
+                onFailure = { errorMessage ->
+                    _forgotPasswordStatus.value = errorMessage
+                }
+            )
+        }
+    }
+
+    fun resetForgotPasswordStatus() {
+        _forgotPasswordStatus.value = null
+    }
+
+    fun updateProfile(email: String, imageUri: android.net.Uri? = null, context: android.content.Context) {
         viewModelScope.launch {
             _updateStatus.value = null
             repository.updateProfile(
                 email = email,
+                imageUri = imageUri,
+                context = context,
                 onSuccess = { _updateStatus.value = "success" },
                 onFailure = { error -> _updateStatus.value = error }
             )

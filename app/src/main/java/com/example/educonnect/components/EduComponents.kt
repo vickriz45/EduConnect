@@ -128,8 +128,6 @@ fun EduBottomNavigation(
         val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { item ->
-            // Cek apakah route saat ini adalah route yang dimulai dengan item.route
-            // Misal: "chat?sharedTitle=..." tetap dianggap sebagai "chat"
             val isSelected = currentRoute == item.route ||
                     (item.route == "chat" && currentRoute?.startsWith("chat") == true)
 

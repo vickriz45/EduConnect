@@ -11,5 +11,6 @@ data class UserEntity(
     val studentClass: String = "",
     val email: String = "",
     val prodi: String = "",
-    val password: String = ""
+    val password: String = "",
+    val profilePictureUrl: String = ""
 )
