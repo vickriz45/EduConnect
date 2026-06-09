@@ -128,16 +128,24 @@ fun EduBottomNavigation(
         val currentRoute = navBackStackEntry?.destination?.route
 
         items.forEach { item ->
-            val isSelected = currentRoute == item.route
+            // Cek apakah route saat ini adalah route yang dimulai dengan item.route
+            // Misal: "chat?sharedTitle=..." tetap dianggap sebagai "chat"
+            val isSelected = currentRoute == item.route ||
+                    (item.route == "chat" && currentRoute?.startsWith("chat") == true)
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    if (currentRoute != item.route) {
+                    if (currentRoute != item.route && currentRoute?.startsWith("${item.route}?")?.let { !it == true } == true) {
                         navController.navigate(item.route) {
                             popUpTo("home") { saveState = true }
                             launchSingleTop = true
                             restoreState = true
+                        }
+                    } else if (item.route == "chat" && currentRoute?.startsWith("chat?") == true) {
+                        navController.navigate("chat") {
+                            popUpTo("chat") { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 },

@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
@@ -27,6 +26,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,16 +45,28 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
-import androidx.compose.foundation.layout.PaddingValues  // TAMBAHKAN IMPORT INI
+import androidx.compose.foundation.layout.PaddingValues
 
 @Composable
 fun ChatScreen(
     navController: NavHostController,
-    username: String = "Sumbul"
+    username: String = "Sumbul",
+    sharedTitle: String = "",
+    sharedDescription: String = "",
+    sharedTime: String = ""
 ) {
     var messageText by remember { mutableStateOf("") }
+    var hasAutoFilled by remember { mutableStateOf(false) }
 
     val messages = remember { mutableStateListOf<ChatMessage>() }
+
+    // Auto fill message text when coming from share
+    LaunchedEffect(sharedTitle, sharedDescription, sharedTime) {
+        if (sharedTitle.isNotEmpty() && sharedDescription.isNotEmpty() && !hasAutoFilled) {
+            messageText = "📢 ${sharedTitle}\n\n${sharedDescription}\n\nWaktu: ${sharedTime}"
+            hasAutoFilled = true
+        }
+    }
 
     if (messages.isEmpty()) {
         messages.addAll(
@@ -76,6 +88,7 @@ fun ChatScreen(
                 .background(White)
                 .padding(paddingValues)
         ) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -113,11 +126,12 @@ fun ChatScreen(
                 }
             }
 
+            // Chat messages
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),  // PERBAIKI INI
+                contentPadding = PaddingValues(16.dp),
                 reverseLayout = false
             ) {
                 items(messages) { message ->
@@ -126,6 +140,7 @@ fun ChatScreen(
                 }
             }
 
+            // Input message
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,6 +174,7 @@ fun ChatScreen(
                                 )
                             )
                             messageText = ""
+                            hasAutoFilled = false
                         }
                     },
                     modifier = Modifier

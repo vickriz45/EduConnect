@@ -2,8 +2,10 @@ package com.example.educonnect.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.educonnect.auth.LoginScreen
 import com.example.educonnect.auth.RegisterScreen
 import com.example.educonnect.auth.SplashScreen
@@ -13,6 +15,7 @@ import com.example.educonnect.ui.home.HomeScreen
 import com.example.educonnect.ui.profile.ProfileScreen
 import com.example.educonnect.ui.chat.ChatScreen
 import com.example.educonnect.ui.boards.BoardsScreen
+import java.net.URLDecoder
 
 @Composable
 fun NavGraph(
@@ -66,10 +69,37 @@ fun NavGraph(
             )
         }
 
-        composable("chat") {
+        // SATU ROUTE CHAT dengan PARAMETER OPTIONAL
+        composable(
+            route = "chat?sharedTitle={sharedTitle}&sharedDescription={sharedDescription}&sharedTime={sharedTime}",
+            arguments = listOf(
+                navArgument("sharedTitle") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                    nullable = true
+                },
+                navArgument("sharedDescription") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                    nullable = true
+                },
+                navArgument("sharedTime") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+            val sharedTitle = backStackEntry.arguments?.getString("sharedTitle") ?: ""
+            val sharedDescription = backStackEntry.arguments?.getString("sharedDescription") ?: ""
+            val sharedTime = backStackEntry.arguments?.getString("sharedTime") ?: ""
+
             ChatScreen(
                 navController = navController,
-                username = "Sumbul"
+                username = "Sumbul",
+                sharedTitle = sharedTitle,
+                sharedDescription = sharedDescription,
+                sharedTime = sharedTime
             )
         }
 

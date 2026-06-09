@@ -17,9 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.People
@@ -39,7 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,6 +46,7 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
+import java.net.URLEncoder
 
 @Composable
 fun BoardsScreen(
@@ -87,7 +84,15 @@ fun BoardsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(boardList) { board ->
-                    InteractiveBoardCard(board = board)
+                    InteractiveBoardCard(
+                        board = board,
+                        onShareClick = { selectedBoard ->
+                            val encodedTitle = java.net.URLEncoder.encode(selectedBoard.title, "UTF-8")
+                            val encodedDescription = java.net.URLEncoder.encode(selectedBoard.description, "UTF-8")
+                            val encodedTime = java.net.URLEncoder.encode(selectedBoard.time, "UTF-8")
+                            navController.navigate("chat?sharedTitle=$encodedTitle&sharedDescription=$encodedDescription&sharedTime=$encodedTime")
+                        }
+                    )
                 }
             }
         }
@@ -100,8 +105,7 @@ data class InteractiveBoardModel(
     val description: String,
     val time: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val imageColor: Color,
-    var isSaved: Boolean = false
+    val imageColor: Color
 )
 
 val boardList = listOf(
@@ -128,8 +132,10 @@ val boardList = listOf(
 )
 
 @Composable
-fun InteractiveBoardCard(board: InteractiveBoardModel) {
-    var isSaved by remember { mutableStateOf(board.isSaved) }
+fun InteractiveBoardCard(
+    board: InteractiveBoardModel,
+    onShareClick: (InteractiveBoardModel) -> Unit
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Card(
@@ -178,16 +184,6 @@ fun InteractiveBoardCard(board: InteractiveBoardModel) {
                         color = GrayText
                     )
                 }
-
-                IconButton(
-                    onClick = { isSaved = !isSaved }
-                ) {
-                    Icon(
-                        if (isSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Save",
-                        tint = if (isSaved) PurpleMain else GrayText
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -216,7 +212,7 @@ fun InteractiveBoardCard(board: InteractiveBoardModel) {
                 horizontalArrangement = Arrangement.End
             ) {
                 IconButton(
-                    onClick = {},
+                    onClick = { onShareClick(board) },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
