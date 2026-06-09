@@ -15,6 +15,7 @@ import com.example.educonnect.ui.home.HomeScreen
 import com.example.educonnect.ui.profile.ProfileScreen
 import com.example.educonnect.ui.chat.ChatScreen
 import com.example.educonnect.ui.boards.BoardsScreen
+import com.example.educonnect.ui.profile.EditProfileScreen
 import java.net.URLDecoder
 
 @Composable
@@ -106,6 +107,13 @@ fun NavGraph(
         composable("boards") {
             BoardsScreen(
                 navController = navController
+            )
+        }
+
+        composable("edit_profile") {
+            EditProfileScreen(
+                authViewModel = authViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

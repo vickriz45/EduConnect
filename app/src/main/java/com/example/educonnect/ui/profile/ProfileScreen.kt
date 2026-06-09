@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,23 +46,23 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .background(White)
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
+            // ── Header ──────────────────────────────────────────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Profile",
+                    text = "Profile",
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp,
                     color = TextDark,
                     modifier = Modifier.weight(1f)
                 )
-                // Tombol Edit yang berfungsi
                 Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Edit",
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Profile",
                     tint = PurpleMain,
                     modifier = Modifier
                         .size(24.dp)
@@ -69,19 +70,32 @@ fun ProfileScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+            // ── Avatar ──────────────────────────────────────────────────
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
-                    modifier = Modifier.size(90.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = GrayText, modifier = Modifier.size(50.dp))
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = GrayText,
+                        modifier = Modifier.size(50.dp)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // ── Nama ────────────────────────────────────────────────────
             Text(
                 text = userProfile?.fullName ?: "Nama Mahasiswa",
                 fontWeight = FontWeight.Bold,
@@ -90,46 +104,87 @@ fun ProfileScreen(
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
+            // ── Info Card ───────────────────────────────────────────────
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    // Row NIM
-                    InfoRow(Icons.Default.School, "NIM", userProfile?.nim ?: "-")
-                    // Row Email
-                    InfoRow(Icons.Default.Email, "Email", userProfile?.email ?: "-")
-                    // Row Class
-                    InfoRow(Icons.Default.Person, "Class", userProfile?.studentClass ?: "-")
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                    InfoRow(
+                        icon = Icons.Default.School,
+                        label = "NIM",
+                        value = userProfile?.nim ?: "-"
+                    )
+                    HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
+                    InfoRow(
+                        icon = Icons.Default.Email,
+                        label = "Email",
+                        value = userProfile?.email ?: "-"
+                    )
+                    HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
+                    InfoRow(
+                        icon = Icons.Default.Person,
+                        label = "Kelas",
+                        value = userProfile?.studentClass ?: "-"
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // ── Tombol Logout ───────────────────────────────────────────
             Button(
                 onClick = onLogout,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f), contentColor = Color.Red)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red.copy(alpha = 0.1f),
+                    contentColor = Color.Red
+                ),
+                elevation = ButtonDefaults.buttonElevation(0.dp)
             ) {
-                Text("Logout", fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Logout",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
             }
         }
     }
 }
 
 @Composable
-fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 10.dp)) {
-        Icon(icon, contentDescription = null, tint = PurpleMain, modifier = Modifier.size(24.dp))
+fun InfoRow(icon: ImageVector, label: String, value: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 14.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = PurpleMain,
+            modifier = Modifier.size(24.dp)
+        )
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(label, fontSize = 12.sp, color = GrayText)
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = TextDark)
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = GrayText,
+                lineHeight = 16.sp
+            )
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextDark
+            )
         }
     }
 }

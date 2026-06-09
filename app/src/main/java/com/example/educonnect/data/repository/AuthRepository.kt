@@ -168,13 +168,12 @@ class AuthRepository(
     }
 
     suspend fun updateProfile(
-        nim: String,
         email: String,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         try {
-            Log.d("AuthRepo", "Update profile: nim=$nim, email=$email")
+            Log.d("AuthRepo", "Update profile: email=$email")
 
             val currentUser = firebaseAuth.currentUser
             if (currentUser == null) {
@@ -184,8 +183,7 @@ class AuthRepository(
             }
 
             val updates = mapOf(
-                "email" to email,
-                "nim" to nim
+                "email" to email
             )
 
             firestore.collection("users").document(currentUser.uid).update(updates).await()
@@ -193,13 +191,12 @@ class AuthRepository(
 
             val currentUserData = userDao.getUserProfile()
             currentUserData?.let {
-                val updatedUser = it.copy(email = email, nim = nim)
+                val updatedUser = it.copy(email = email)
                 userDao.insertUser(updatedUser)
                 Log.d("AuthRepo", "Room update success")
             }
 
-            cachedUser = cachedUser?.copy(email = email, nim = nim)
-            cachedNim = nim
+            cachedUser = cachedUser?.copy(email = email)
 
             onSuccess()
         } catch (e: Exception) {

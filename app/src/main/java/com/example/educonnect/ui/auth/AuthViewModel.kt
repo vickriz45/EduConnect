@@ -24,18 +24,18 @@ class AuthViewModel(
     private val _loginStatus = MutableStateFlow<String?>(null)
     val loginStatus: StateFlow<String?> = _loginStatus
 
+    // Status untuk operasi update profile: null = idle, "success" = berhasil, pesan lain = error
+    private val _updateStatus = MutableStateFlow<String?>(null)
+    val updateStatus: StateFlow<String?> = _updateStatus
+
     fun login(nim: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            _loginStatus.value = null // Reset status error sebelum memproses
+            _loginStatus.value = null
             repository.loginUser(
                 nim = nim,
                 password = password,
-                onSuccess = {
-                    onSuccess()
-                },
-                onFailure = { errorMessage ->
-                    _loginStatus.value = errorMessage
-                }
+                onSuccess = { onSuccess() },
+                onFailure = { errorMessage -> _loginStatus.value = errorMessage }
             )
         }
     }
@@ -59,40 +59,30 @@ class AuthViewModel(
             )
             repository.registerUser(
                 user = newUser,
-                onSuccess = {
-                    onRegisterSuccess()
-                },
-                onFailure = { errorMessage ->
-                    _loginStatus.value = errorMessage
-                }
+                onSuccess = { onRegisterSuccess() },
+                onFailure = { errorMessage -> _loginStatus.value = errorMessage }
             )
         }
     }
 
-    fun updateProfile(
-        nim: String,
-        email: String,
-        onSuccess: () -> Unit
-    ) {
+    fun updateProfile(email: String) {
         viewModelScope.launch {
+            _updateStatus.value = null
             repository.updateProfile(
-                nim = nim,
                 email = email,
-                onSuccess = {
-                    onSuccess()
-                },
-                onFailure = { errorMessage ->
-                    _loginStatus.value = errorMessage
-                }
+                onSuccess = { _updateStatus.value = "success" },
+                onFailure = { error -> _updateStatus.value = error }
             )
         }
+    }
+
+    fun resetUpdateStatus() {
+        _updateStatus.value = null
     }
 
     fun logout(onLogoutSuccess: () -> Unit) {
         viewModelScope.launch {
-            repository.logoutUser {
-                onLogoutSuccess()
-            }
+            repository.logoutUser { onLogoutSuccess() }
         }
     }
 }

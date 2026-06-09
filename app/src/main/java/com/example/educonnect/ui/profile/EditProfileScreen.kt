@@ -14,42 +14,58 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.educonnect.components.EduButton
 import com.example.educonnect.ui.auth.AuthViewModel
+import com.example.educonnect.ui.theme.PurpleMain
 
 @Composable
 fun EditProfileScreen(
     authViewModel: AuthViewModel,
     onNavigateBack: () -> Unit
 ) {
-    // State tampungan input user
+    // Ambil data user yang sedang login
+    val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
+
+    // State input – diisi dengan data lama saat pertama kali load
     var email by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") } // Awalnya kosong sesuai request-mu
+    var phoneNumber by remember { mutableStateOf("") }
     var aboutMe by remember { mutableStateOf("") }
 
-    // Efek ketika halaman pertama kali dibuka, load data lama dari Firebase (jika ada)
-    LaunchedEffect(Unit) {
-        // Nanti di sini kita ambil email asli yang sedang login dari Firebase Auth
-        // email = FirebaseAuth.getInstance().currentUser?.email ?: ""
+    // Isi field dengan data yang sudah ada di Room/Firebase saat komponen pertama kali muncul
+    LaunchedEffect(userProfile) {
+        userProfile?.let { profile ->
+            if (email.isEmpty()) email = profile.email
+            // phoneNumber & aboutMe bisa ditambahkan ke UserEntity jika diperlukan
+        }
     }
 
-    Scaffold(
-        // Menggunakan header buatan sendiri (Row) agar 100% aman dari error @OptIn
-    ) { padding ->
+    val updateStatus by authViewModel.updateStatus.collectAsStateWithLifecycle()
+
+    // Kalau update sukses, langsung kembali
+    LaunchedEffect(updateStatus) {
+        if (updateStatus == "success") {
+            authViewModel.resetUpdateStatus()
+            onNavigateBack()
+        }
+    }
+
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(padding)
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                /* 1. HEADER NAVIGASI */
+                // ── Header ──────────────────────────────────────────────
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -57,7 +73,11 @@ fun EditProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali", tint = Color.Black)
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Kembali",
+                            tint = Color.Black
+                        )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -68,93 +88,93 @@ fun EditProfileScreen(
                     )
                 }
 
-                /* 2. AREA UBAH FOTO PROFIL (Lingkaran dengan Ikon Kamera Overlap) */
+                // ── Avatar + Badge Kamera ────────────────────────────────
+                // FIX: Gunakan Box tunggal dengan ukuran tetap agar badge kamera
+                // tidak overlap ke luar batas lingkaran.
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .border(2.dp, Color(0xFF9333EA), CircleShape)
-                            .padding(4.dp)
-                            .background(Color(0xFFE9ECEF), CircleShape)
-                            .clickable { /* Logika buka galeri untuk ganti foto */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(70.dp)
-                        )
-
-                        // Badge Ikon Kamera Kecil di sudut kanan bawah foto
+                    Box(modifier = Modifier.size(120.dp)) {
+                        // Lingkaran avatar
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .background(Color(0xFF9333EA), CircleShape)
-                                .align(Alignment.BottomEnd),
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, PurpleMain, CircleShape)
+                                .background(Color(0xFFE9ECEF))
+                                .clickable { /* Logika buka galeri */ },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(70.dp)
+                            )
+                        }
+
+                        // Badge kamera – posisi sudut kanan bawah
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .align(Alignment.BottomEnd)
+                                .clip(CircleShape)
+                                .background(PurpleMain),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CameraAlt,
                                 contentDescription = "Ganti Foto",
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
 
-                /* 3. INPUT FIELD EMAIL (WAJIB ISI) */
+                // ── Input Email ──────────────────────────────────────────
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    singleLine = true
+                    singleLine = true,
+                    isError = email.isEmpty()
                 )
+
+                if (email.isEmpty()) {
+                    Text(
+                        text = "Email tidak boleh kosong",
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                /* 4. INPUT FIELD NOMOR TELEPON (OPSIONAL - BISA KOSONG) */
-                OutlinedTextField(
-                    value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
-                    label = { Text("Nomor Telepon (Opsional)") },
-                    placeholder = { Text("Contoh: 08123456xxx") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                /* 5. INPUT FIELD ABOUT ME */
-                OutlinedTextField(
-                    value = aboutMe,
-                    onValueChange = { aboutMe = it },
-                    label = { Text("About Me") },
-                    placeholder = { Text("Ceritakan sedikit tentang dirimu atau keahlian kodingmu...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
+                // Tampilkan pesan error dari ViewModel jika ada
+                if (updateStatus != null && updateStatus != "success") {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = updateStatus ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
             }
 
-            /* 6. TOMBOL SIMPAN PERUBAHAN */
+            // ── Tombol Simpan ────────────────────────────────────────────
             EduButton(
                 text = "Simpan Perubahan",
                 onClick = {
-                    // Validasi: Minimal Email tidak boleh kosong sebelum di-save ke Firebase
                     if (email.isNotEmpty()) {
-                        // Logika updateProfile ke Firebase Firestore & Auth nanti di sini
-                        onNavigateBack() // Kembali ke halaman profile setelah sukses
+                        authViewModel.updateProfile(email = email)
                     }
                 }
             )
