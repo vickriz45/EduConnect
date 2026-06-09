@@ -1,13 +1,13 @@
 [versions]
 activityCompose = "1.9.0"
-agp = "9.2.1"
-coreKtx = "1.10.1"
+agp = "8.13.0"                 # Diturunkan ke 8.13.0 agar cocok dengan instalasi Android Studio Windows kamu
+coreKtx = "1.15.0"             # Diturunkan ke 1.15.0 agar tidak menuntut SDK 37 (yang bikin error kemarin)
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
-kotlin = "2.3.21"
-ksp = "2.3.7"
+kotlin = "2.1.0"               # FIX: Menggunakan versi resmi 2.1.0 (Kompatibel dengan Firebase)
+ksp = "2.1.0-1.0.29"           # FIX: Menggunakan pasangan KSP yang valid untuk Kotlin 2.1.0
 composeBom = "2026.02.01"
 playServicesMeasurementApi = "23.2.0"
 firebaseFirestoreKtx = "26.3.0"
@@ -35,8 +35,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-#kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-
-
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

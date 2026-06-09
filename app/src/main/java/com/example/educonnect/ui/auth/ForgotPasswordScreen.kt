@@ -1,4 +1,4 @@
-package com.example.educonnect.auth
+package com.example.educonnect.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

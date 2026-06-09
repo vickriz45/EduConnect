@@ -1,4 +1,4 @@
-package com.example.educonnect.auth
+package com.example.educonnect.ui.auth
 
 import android.os.Handler
 import android.os.Looper

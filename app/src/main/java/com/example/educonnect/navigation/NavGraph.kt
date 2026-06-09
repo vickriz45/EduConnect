@@ -6,10 +6,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.educonnect.auth.LoginScreen
-import com.example.educonnect.auth.RegisterScreen
-import com.example.educonnect.auth.SplashScreen
-import com.example.educonnect.auth.ForgotPasswordScreen
+import com.example.educonnect.ui.auth.LoginScreen
+import com.example.educonnect.ui.auth.RegisterScreen
+import com.example.educonnect.ui.auth.SplashScreen
+import com.example.educonnect.ui.auth.ForgotPasswordScreen
 import com.example.educonnect.ui.auth.AuthViewModel
 import com.example.educonnect.ui.home.HomeScreen
 import com.example.educonnect.ui.profile.ProfileScreen
