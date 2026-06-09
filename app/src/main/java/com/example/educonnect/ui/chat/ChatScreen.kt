@@ -1,17 +1,7 @@
 package com.example.educonnect.ui.chat
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -19,19 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,12 +24,23 @@ import com.example.educonnect.ui.theme.GrayText
 import com.example.educonnect.ui.theme.PurpleMain
 import com.example.educonnect.ui.theme.TextDark
 import com.example.educonnect.ui.theme.White
-import androidx.compose.foundation.layout.PaddingValues
+import com.google.firebase.auth.FirebaseAuth // Import Auth
+import com.google.firebase.firestore.FirebaseFirestore // Import Firestore
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+data class ChatMessage(
+    val name: String = "",
+    val message: String = "",
+    val time: String = "",
+    val senderId: String = "" // Tambahkan ini untuk melacak UID pengirim di Firebase
+)
 @Composable
 fun ChatScreen(
     navController: NavHostController,
-    username: String = "Sumbul",
+    username: String = "Mahasiswa PNM", // Default username jika dari auth belum ke-passing
     sharedTitle: String = "",
     sharedDescription: String = "",
     sharedTime: String = ""
@@ -60,23 +50,36 @@ fun ChatScreen(
 
     val messages = remember { mutableStateListOf<ChatMessage>() }
 
-    // Auto fill message text when coming from share
+    // Inisialisasi Firebase Instansi
+    val firestore = remember { FirebaseFirestore.getInstance() }
+    val auth = remember { FirebaseAuth.getInstance() }
+    val currentUserId = auth.currentUser?.uid ?: ""
+
+    // 1. MENDENGARKAN DATABASE FIRESTORE SECARA REAL-TIME
+    LaunchedEffect(Unit) {
+        firestore.collection("group_chats")
+            .orderBy("timestamp", Query.Direction.ASCENDING) // Mengurutkan chat dari yang terlama ke terbaru
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+
+                if (snapshot != null) {
+                    messages.clear()
+                    for (document in snapshot.documents) {
+                        val msg = document.toObject(ChatMessage::class.java)
+                        if (msg != null) {
+                            messages.add(msg)
+                        }
+                    }
+                }
+            }
+    }
+
+    // Auto fill message text ketika ada data kiriman share dari Boards Page
     LaunchedEffect(sharedTitle, sharedDescription, sharedTime) {
         if (sharedTitle.isNotEmpty() && sharedDescription.isNotEmpty() && !hasAutoFilled) {
             messageText = "📢 ${sharedTitle}\n\n${sharedDescription}\n\nWaktu: ${sharedTime}"
             hasAutoFilled = true
         }
-    }
-
-    if (messages.isEmpty()) {
-        messages.addAll(
-            listOf(
-                ChatMessage("Piki Stecu", "Halo semua, ada yang bisa dibantu?", "10:30", isOwnMessage = false),
-                ChatMessage("Pinul Mania", "Tugas TRPL sudah dikerjakan?", "09:15", isOwnMessage = false),
-                ChatMessage(username, "Sudah, tinggal nunggu review", "09:20", isOwnMessage = true),
-                ChatMessage("Muhammad Sumbul", "Besok ada meeting jam 10 di lab", "Yesterday", isOwnMessage = false)
-            )
-        )
     }
 
     Scaffold(
@@ -88,7 +91,7 @@ fun ChatScreen(
                 .background(White)
                 .padding(paddingValues)
         ) {
-            // Header
+            // Header Group Diskusi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +129,7 @@ fun ChatScreen(
                 }
             }
 
-            // Chat messages
+            // Chat messages list
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -135,12 +138,14 @@ fun ChatScreen(
                 reverseLayout = false
             ) {
                 items(messages) { message ->
-                    ChatBubble(message = message, currentUsername = username)
+                    // Cek kepemilikan pesan berdasarkan UID Firebase Auth yang sedang login
+                    val isOwn = message.senderId == currentUserId
+                    ChatBubble(message = message, isOwnMessage = isOwn)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
-            // Input message
+            // Input message area
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,14 +170,21 @@ fun ChatScreen(
                 IconButton(
                     onClick = {
                         if (messageText.isNotBlank()) {
-                            messages.add(
-                                ChatMessage(
-                                    name = username,
-                                    message = messageText,
-                                    time = "Baru saja",
-                                    isOwnMessage = true
-                                )
+                            // FORMAT WAKTU (Jam:Menit)
+                            val currentTimeStr = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+
+                            // DATA DATA YANG DIKIRIM KE CLOUD DATABASE FIRESTORE
+                            val dataPesan = hashMapOf(
+                                "name" to username,
+                                "message" to messageText,
+                                "time" to currentTimeStr,
+                                "senderId" to currentUserId,
+                                "timestamp" to System.currentTimeMillis() // Dipakai untuk sorting data di query atas
                             )
+
+                            // Tembak langsung ke dokumen Firestore
+                            firestore.collection("group_chats").add(dataPesan)
+
                             messageText = ""
                             hasAutoFilled = false
                         }
@@ -193,29 +205,22 @@ fun ChatScreen(
     }
 }
 
-data class ChatMessage(
-    val name: String,
-    val message: String,
-    val time: String,
-    val isOwnMessage: Boolean = false
-)
-
 @Composable
-fun ChatBubble(message: ChatMessage, currentUsername: String) {
-    val bubbleColor = if (message.isOwnMessage) PurpleMain else Color(0xFFE4E6EB)
-    val textColor = if (message.isOwnMessage) Color.White else TextDark
+fun ChatBubble(message: ChatMessage, isOwnMessage: Boolean) {
+    val bubbleColor = if (isOwnMessage) PurpleMain else Color(0xFFE4E6EB)
+    val textColor = if (isOwnMessage) Color.White else TextDark
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (message.isOwnMessage) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (isOwnMessage) Arrangement.End else Arrangement.Start
     ) {
         Column(
             modifier = Modifier
-                .width(280.dp)
+                .widthIn(max = 280.dp) // Menggunakan widthIn agar balon mengecil jika chat pendek
                 .background(bubbleColor, RoundedCornerShape(16.dp))
                 .padding(12.dp)
         ) {
-            if (!message.isOwnMessage) {
+            if (!isOwnMessage) {
                 Text(
                     message.name,
                     fontWeight = FontWeight.Bold,
@@ -233,7 +238,8 @@ fun ChatBubble(message: ChatMessage, currentUsername: String) {
             Text(
                 message.time,
                 fontSize = 10.sp,
-                color = if (message.isOwnMessage) Color.White.copy(alpha = 0.7f) else GrayText
+                color = if (isOwnMessage) Color.White.copy(alpha = 0.7f) else GrayText,
+                modifier = Modifier.align(Alignment.End) // Taruh keterangan waktu di pojok kanan bawah balon chat
             )
         }
     }
