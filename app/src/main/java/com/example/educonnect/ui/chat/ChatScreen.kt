@@ -49,6 +49,7 @@ fun ChatScreen(
     var hasAutoFilled by remember { mutableStateOf(false) }
 
     val messages = remember { mutableStateListOf<ChatMessage>() }
+    var memberCount by remember { mutableStateOf(0) }
 
     // Inisialisasi Firebase Instansi
     val firestore = remember { FirebaseFirestore.getInstance() }
@@ -70,6 +71,13 @@ fun ChatScreen(
                             messages.add(msg)
                         }
                     }
+                }
+            }
+        firestore.collection("users")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot != null) {
+                    memberCount = snapshot.size()
                 }
             }
     }
@@ -122,7 +130,7 @@ fun ChatScreen(
                         color = TextDark
                     )
                     Text(
-                        "Grup Diskusi • ${messages.size} pesan",
+                        "Grup Diskusi • $memberCount Anggota",
                         fontSize = 12.sp,
                         color = GrayText
                     )
