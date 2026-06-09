@@ -60,6 +60,25 @@ class AuthRepository(
         }
     }
 
+    suspend fun updateProfile(
+        nim: String,
+        email: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        try {
+            val updates = mapOf(
+                "nim" to nim,
+                "email" to email
+            )
+            // Update di Firestore
+            firestore.collection("users").document(nim).update(updates).await()
+            onSuccess()
+        } catch (e: Exception) {
+            onFailure(e.localizedMessage ?: "Gagal memperbarui profil")
+        }
+    }
+
     suspend fun logoutUser(onComplete: () -> Unit) {
         firebaseAuth.signOut()
         userDao.clearData()

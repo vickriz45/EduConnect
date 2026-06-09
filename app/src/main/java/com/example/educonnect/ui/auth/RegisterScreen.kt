@@ -127,9 +127,17 @@ fun RegisterScreen(
         EduButton(
             text = "Daftar →",
             onClick = {
-                if (fullName.isNotEmpty() && nim.isNotEmpty() && password.isNotEmpty()) {
-                    viewModel.register(nim, fullName, studentClass, email, password)
-                    onNavigateToLogin()
+                if (fullName.isNotEmpty()) {
+                    viewModel.register(
+                        nim = nim,
+                        fullName = fullName,
+                        studentClass = studentClass,
+                        email = email,
+                        password = password,
+                        onRegisterSuccess = {
+                            onNavigateToLogin()
+                        }
+                    )
                 }
             }
         )

@@ -62,7 +62,7 @@ fun NavGraph(
         composable("home") {
             HomeScreen(
                 navController = navController,
-                username = "Sumbul"
+                authViewModel = authViewModel
             )
         }
 
@@ -82,9 +82,12 @@ fun NavGraph(
         composable("profile") {
             ProfileScreen(
                 navController = navController,
+                authViewModel = authViewModel,
                 onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                    authViewModel.logout {
+                        navController.navigate("login") {
+                            popUpTo(0)
+                        }
                     }
                 }
             )
