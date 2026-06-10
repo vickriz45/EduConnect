@@ -1,6 +1,7 @@
 package com.example.educonnect.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -105,10 +106,12 @@ fun NavGraph(
             val sharedTitle = backStackEntry.arguments?.getString("sharedTitle") ?: ""
             val sharedDescription = backStackEntry.arguments?.getString("sharedDescription") ?: ""
             val sharedTime = backStackEntry.arguments?.getString("sharedTime") ?: ""
+            val userProfileState = authViewModel.userProfile.collectAsState(initial = null)
+            val currentUsername = userProfileState.value?.fullName ?: "Mahasiswa"
 
             ChatScreen(
                 navController = navController,
-                username = "Sumbul",
+                username = currentUsername,
                 sharedTitle = sharedTitle,
                 sharedDescription = sharedDescription,
                 sharedTime = sharedTime
