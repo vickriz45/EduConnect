@@ -31,7 +31,16 @@ import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
+fun isDeviceOnline(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
 data class ChatMessage(
     val name: String = "",
     val message: String = "",
@@ -41,7 +50,7 @@ data class ChatMessage(
 @Composable
 fun ChatScreen(
     navController: NavHostController,
-    username: String = "Mahasiswa PNM",
+    username: String = "",
     sharedTitle: String = "",
     sharedDescription: String = "",
     sharedTime: String = ""
@@ -55,6 +64,16 @@ fun ChatScreen(
     val firestore = remember { FirebaseFirestore.getInstance() }
     val auth = remember { FirebaseAuth.getInstance() }
     val currentUserId = auth.currentUser?.uid ?: ""
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var isOnline by remember { mutableStateOf(isDeviceOnline(context)) }
+
+    LaunchedEffect(Unit) {
+        while(true) {
+            isOnline = isDeviceOnline(context)
+            kotlinx.coroutines.delay(3000) // Cek status internet setiap 3 detik sekali
+        }
+    }
 
     LaunchedEffect(Unit) {
         firestore.collection("group_chats")
@@ -131,6 +150,23 @@ fun ChatScreen(
                         "Grup Diskusi • $memberCount Anggota",
                         fontSize = 12.sp,
                         color = GrayText
+                    )
+                }
+            }
+
+            if (!isOnline) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE57373)) // Warna merah soft/pudar agar estetik
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⚠️ Mode Offline • Menunggu Jaringan...",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

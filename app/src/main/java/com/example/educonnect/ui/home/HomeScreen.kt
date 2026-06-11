@@ -38,7 +38,7 @@ fun HomeScreen(
     authViewModel: AuthViewModel
 ) {
     val userProfile by authViewModel.userProfile.collectAsStateWithLifecycle()
-    val username = userProfile?.fullName ?: "Mahasiswa"
+    val username = userProfile?.fullName ?: ""
 
     val firestore = remember { FirebaseFirestore.getInstance() }
     val latestAnnouncements = remember { mutableStateListOf<InteractiveBoardModel>() }

@@ -19,7 +19,6 @@ import com.example.educonnect.ui.chat.ChatScreen
 import com.example.educonnect.ui.boards.BoardsScreen
 import com.example.educonnect.ui.chat.GroupMembersScreen
 import com.example.educonnect.ui.profile.EditProfileScreen
-import java.net.URLDecoder
 
 @Composable
 fun NavGraph(

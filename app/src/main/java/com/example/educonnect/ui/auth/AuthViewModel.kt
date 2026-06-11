@@ -77,7 +77,7 @@ class AuthViewModel(
                 email = email,
                 onSuccess = {
                     _forgotPasswordStatus.value = "success"
-                    onEmailSent() // Callback untuk pindah halaman atau memicu pop-up informasi
+                    onEmailSent()
                 },
                 onFailure = { errorMessage ->
                     _forgotPasswordStatus.value = errorMessage
